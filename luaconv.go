@@ -49,7 +49,7 @@ func (c *StructCoder) TableToStruct(L *lua.LState, table *lua.LTable) (interface
 	for _, x := range tableData {
 		key, is := x.key.(lua.LString)
 		if !is {
-			return nil, errors.New("scriptsys.StructCoder.TableToStruct: cannot convert a table with non-string keys to a struct")
+			return nil, errors.New("luaconv.StructCoder.TableToStruct: cannot convert a table with non-string keys to a struct")
 		}
 
 		val, err := LuaToNativeValue(L, x.val, c.z.Field(string(key)).Type(), c.tagName)
@@ -97,7 +97,7 @@ func NativeValueToLua(L *lua.LState, nvval reflect.Value, subtag string) (lua.LV
 		return lua.LString(nvval.String()), nil
 
 	case reflect.Complex64, reflect.Complex128:
-		return nil, fmt.Errorf("scriptsys.NativeValueToLua: cannot convert %v to lua value", nvtype.String())
+		return nil, fmt.Errorf("luaconv.NativeValueToLua: cannot convert %v to lua value", nvtype.String())
 
 	case reflect.Slice, reflect.Array:
 		table := L.NewTable()
@@ -140,7 +140,7 @@ func NativeValueToLua(L *lua.LState, nvval reflect.Value, subtag string) (lua.LV
 		return table, nil
 
 	default:
-		return nil, fmt.Errorf("scriptsys.NativeValueToLua: cannot convert %v to lua value", nvtype.String())
+		return nil, fmt.Errorf("luaconv.NativeValueToLua: cannot convert %v to lua value", nvtype.String())
 	}
 }
 
@@ -170,7 +170,7 @@ func LuaToNativeValue(L *lua.LState, lv lua.LValue, destType reflect.Type, subta
 				return LuaToNativeValue(L, lv, mapType, subtag)
 			}
 		default:
-			return reflect.Value{}, fmt.Errorf("scriptsys.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
+			return reflect.Value{}, fmt.Errorf("luaconv.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
 
 		}
 
@@ -184,11 +184,11 @@ func LuaToNativeValue(L *lua.LState, lv lua.LValue, destType reflect.Type, subta
 			} else if strval.Type().ConvertibleTo(destType) {
 				return strval.Convert(destType), nil
 			} else {
-				return reflect.Value{}, fmt.Errorf("scriptsys.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
+				return reflect.Value{}, fmt.Errorf("luaconv.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
 			}
 
 		default:
-			return reflect.Value{}, fmt.Errorf("scriptsys.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
+			return reflect.Value{}, fmt.Errorf("luaconv.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
 		}
 
 	case reflect.Int,
@@ -208,16 +208,16 @@ func LuaToNativeValue(L *lua.LState, lv lua.LValue, destType reflect.Type, subta
 		case lua.LNumber:
 			return reflect.ValueOf(float64(lv)).Convert(destType), nil
 		default:
-			return reflect.Value{}, fmt.Errorf("scriptsys.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
+			return reflect.Value{}, fmt.Errorf("luaconv.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
 		}
 
 	case reflect.Complex64, reflect.Complex128:
-		return reflect.Value{}, fmt.Errorf("scriptsys.LuaToNativeValue: cannot convert to/from complex64 or complex128")
+		return reflect.Value{}, fmt.Errorf("luaconv.LuaToNativeValue: cannot convert to/from complex64 or complex128")
 
 	case reflect.Slice:
 		table, is := lv.(*lua.LTable)
 		if !is {
-			return reflect.Value{}, fmt.Errorf("scriptsys.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
+			return reflect.Value{}, fmt.Errorf("luaconv.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
 		}
 
 		maxn := table.MaxN()
@@ -239,7 +239,7 @@ func LuaToNativeValue(L *lua.LState, lv lua.LValue, destType reflect.Type, subta
 	case reflect.Array:
 		table, is := lv.(*lua.LTable)
 		if !is {
-			return reflect.Value{}, fmt.Errorf("scriptsys.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
+			return reflect.Value{}, fmt.Errorf("luaconv.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
 		}
 
 		maxn := table.MaxN()
@@ -261,7 +261,7 @@ func LuaToNativeValue(L *lua.LState, lv lua.LValue, destType reflect.Type, subta
 	case reflect.Map:
 		table, is := lv.(*lua.LTable)
 		if !is {
-			return reflect.Value{}, fmt.Errorf("scriptsys.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
+			return reflect.Value{}, fmt.Errorf("luaconv.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
 		}
 
 		aMap := reflect.MakeMap(destType)
@@ -296,11 +296,11 @@ func LuaToNativeValue(L *lua.LState, lv lua.LValue, destType reflect.Type, subta
 			return reflect.ValueOf(aStruct), nil
 
 		default:
-			return reflect.Value{}, fmt.Errorf("scriptsys.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
+			return reflect.Value{}, fmt.Errorf("luaconv.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
 		}
 
 	default:
-		return reflect.Value{}, fmt.Errorf("scriptsys.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
+		return reflect.Value{}, fmt.Errorf("luaconv.LuaToNativeValue: cannot convert %v to %v", lv.Type(), destType.String())
 	}
 }
 
