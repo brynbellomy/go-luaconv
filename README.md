@@ -102,7 +102,7 @@ func main() {
 
 **`[]string` -> Lua table**
 
-```
+```go
 type Flags map[float32]bool
 flagsType := reflect.TypeOf(Flags{})
 
