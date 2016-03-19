@@ -12,7 +12,7 @@ Read the tests for more thorough code.
 ```go
 import (
     "github.com/yuin/gopher-lua"
-    "github.com/foobellomy/go-luaconv"
+    "github.com/brynbellomy/go-luaconv"
 )
 
 type Blah struct {
@@ -36,7 +36,7 @@ func main() {
 ```go
 import (
     "github.com/yuin/gopher-lua"
-    "github.com/foobellomy/go-luaconv"
+    "github.com/brynbellomy/go-luaconv"
 )
 
 type Blah struct {
