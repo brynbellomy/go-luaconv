@@ -1,7 +1,7 @@
 
 # luaconv
 
-Package for converting Go values to Lua values.  For use with [github.com/yuin/gopher-lua](https://github.com/yuin/gopher-lua).
+Package for converting back and forth between Go values <-> Lua values.  For use with [github.com/yuin/gopher-lua](https://github.com/yuin/gopher-lua).
 
 ### Examples
 
