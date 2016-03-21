@@ -60,7 +60,7 @@ var _ = Describe("StructCoder", func() {
 			table.RawSetString("name", lua.LString("bryn"))
 			table.RawSetString("color", lua.LNumber(123))
 
-			aStruct, err := coder.TableToStruct(L, table)
+			aStruct, err := coder.TableToStruct(table)
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -70,22 +70,22 @@ var _ = Describe("StructCoder", func() {
 	})
 })
 
-var _ = Describe("NativeValueToLua", func() {
+var _ = Describe("Encode", func() {
 	Context("when given a Go scalar value", func() {
 		It("should encode any compatible Go value to the appropriate Lua value", func() {
 
 			L := lua.NewState()
 
 			tests := []struct {
-				Native interface{}
-				Lua    lua.LValue
+				Go  interface{}
+				Lua lua.LValue
 			}{
 				{"bryn", lua.LString("bryn")},
 				{uint32(123), lua.LNumber(123)},
 			}
 
 			for i := range tests {
-				luaVal, err := luaconv.NativeValueToLua(L, reflect.ValueOf(tests[i].Native), "")
+				luaVal, err := luaconv.Encode(L, reflect.ValueOf(tests[i].Go), "")
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -104,7 +104,7 @@ var _ = Describe("NativeValueToLua", func() {
 				"bar":   int64(123),
 			}
 
-			luaVal, err := luaconv.NativeValueToLua(L, reflect.ValueOf(expected), "")
+			luaVal, err := luaconv.Encode(L, reflect.ValueOf(expected), "")
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -127,15 +127,13 @@ var _ = Describe("NativeValueToLua", func() {
 	})
 })
 
-var _ = Describe("LuaToNativeValue", func() {
+var _ = Describe("Decode", func() {
 	Context("when given an LString", func() {
 		It("should return a reflect.Value containing a string", func() {
-			L := lua.NewState()
-
 			type Name string
 			nameType := reflect.TypeOf(Name(""))
 
-			nv, err := luaconv.LuaToNativeValue(L, lua.LString("bryn"), nameType, "")
+			nv, err := luaconv.Decode(lua.LString("bryn"), nameType, "")
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -146,12 +144,10 @@ var _ = Describe("LuaToNativeValue", func() {
 
 	Context("when given an LNumber and a uint64 destType", func() {
 		It("should return a reflect.Value containing a uint64", func() {
-			L := lua.NewState()
-
 			type Age uint64
 			ageType := reflect.TypeOf(Age(0))
 
-			nv, err := luaconv.LuaToNativeValue(L, lua.LNumber(123), ageType, "")
+			nv, err := luaconv.Decode(lua.LNumber(123), ageType, "")
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -175,7 +171,7 @@ var _ = Describe("LuaToNativeValue", func() {
 			table.RawSetString("name", lua.LString("bryn"))
 			table.RawSetString("color", lua.LNumber(123))
 
-			nv, err := luaconv.LuaToNativeValue(L, table, reflect.TypeOf(Blah{}), "lua")
+			nv, err := luaconv.Decode(table, reflect.TypeOf(Blah{}), "lua")
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -192,7 +188,7 @@ var _ = Describe("LuaToNativeValue", func() {
 			table.RawSetString("name", lua.LString("bryn"))
 			table.RawSetString("color", lua.LNumber(123))
 
-			nv, err := luaconv.LuaToNativeValue(L, table, reflect.TypeOf(map[string]interface{}{}), "lua")
+			nv, err := luaconv.Decode(table, reflect.TypeOf(map[string]interface{}{}), "lua")
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -217,7 +213,7 @@ var _ = Describe("LuaToNativeValue", func() {
 			table.RawSetInt(1, lua.LString("foo"))
 			table.RawSetInt(2, lua.LString("bar"))
 
-			nv, err := luaconv.LuaToNativeValue(L, table, namesType, "")
+			nv, err := luaconv.Decode(table, namesType, "")
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -237,7 +233,7 @@ var _ = Describe("LuaToNativeValue", func() {
 			table.RawSetInt(1, lua.LString("foo"))
 			table.RawSetInt(2, lua.LString("bar"))
 
-			nv, err := luaconv.LuaToNativeValue(L, table, namesType, "")
+			nv, err := luaconv.Decode(table, namesType, "")
 			if err != nil {
 				Fail(err.Error())
 			}

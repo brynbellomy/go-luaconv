@@ -61,7 +61,7 @@ func main() {
 
 #### Everything else:
 
-All other type conversions should use `luaconv.LuaToNativeValue(...)` and `luaconv.NativeValueToLua(...)`:
+All other type conversions should use `luaconv.Decode(...)` and `luaconv.Encode(...)`:
 
 ----
 
@@ -74,7 +74,7 @@ nameType := reflect.TypeOf(Name(""))
 func main() {
     L := lua.NewState()
 
-    nv, err := luaconv.LuaToNativeValue(L, lua.LString("foo"), nameType, "")
+    nv, err := luaconv.Decode(L, lua.LString("foo"), nameType, "")
     // nv == Name("foo")
 }
 ```
@@ -93,7 +93,7 @@ func main() {
     table.RawSet(lua.LNumber(2.1), lua.LBool(true))
     table.RawSet(lua.LNumber(99.4), lua.LBool(true))
 
-    nv, err := luaconv.LuaToNativeValue(L, table, flagsType, "")
+    nv, err := luaconv.Decode(L, table, flagsType, "")
     // nv == map[float32]bool{2.1: true, 99.4: true}
 }
 ```
@@ -110,7 +110,7 @@ func main() {
     L := lua.NewState()
 
     strs := []string{"foo", "bar"}
-    lv, err := luaconv.NativeValueToLua(L, strs, "")
+    lv, err := luaconv.Encode(L, strs, "")
     // lv == lua.LTable{"foo", "bar"}
 }
 ```
