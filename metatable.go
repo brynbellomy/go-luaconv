@@ -9,8 +9,8 @@ import (
 
 func MetatableForStruct(L *lua.LState, val reflect.Value) *lua.LTable {
 	return metatableForValue(L, val, map[string]func(*lua.LState) int{
-		"__index": structIndex,
-		// "__newindex": structSetIndex,
+		"__index":    structIndex,
+		"__newindex": structSetIndex,
 		"__tostring": luaToString,
 	})
 }
@@ -41,6 +41,29 @@ func structIndex(L *lua.LState) int {
 
 	L.Push(luafieldval)
 	return 1
+}
+
+func structSetIndex(L *lua.LState) int {
+	v := L.CheckUserData(1)
+	key := L.CheckString(2)
+	luaval := L.CheckAny(3)
+
+	// check exported fields
+	rval := v.Value.(reflect.Value)
+	if rval.Type().Kind() == reflect.Ptr {
+		rval = rval.Elem()
+	}
+
+	field := rval.FieldByName(key)
+
+	fieldval, err := Decode(luaval, field.Type(), "")
+	if err != nil {
+		L.RaiseError(err.Error())
+		return 0
+	}
+
+	field.Set(fieldval)
+	return 0
 }
 
 func MetatableForArray(L *lua.LState, val reflect.Value) *lua.LTable {

@@ -143,6 +143,27 @@ var _ = Describe("Wrap", func() {
 				Fail(err.Error())
 			}
 		})
+
+		It("should provide dynamic setters for the exported fields of the struct", func() {
+			val := &blah{"foo", 123}
+			ud, err := luaconv.Wrap(L, reflect.ValueOf(val))
+			if err != nil {
+				Fail(err.Error())
+			}
+
+			L.SetGlobal("val", ud)
+			err = L.DoString(`
+                assert(val.Color == 123)
+                val.Color = 456
+                assert(val.Color == 456)
+            `)
+
+			if err != nil {
+				Fail(err.Error())
+			}
+
+			Expect(val.Color).To(Equal(int32(456)))
+		})
 	})
 
 	Context("when given a function", func() {

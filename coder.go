@@ -138,7 +138,6 @@ func Decode(lv lua.LValue, destType reflect.Type, subtag string) (reflect.Value,
 			}
 		default:
 			return reflect.Value{}, fmt.Errorf("luaconv.Decode: cannot convert %v to %v", lv.Type(), destType.String())
-
 		}
 
 	case reflect.String:

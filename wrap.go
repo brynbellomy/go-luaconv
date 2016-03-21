@@ -12,10 +12,10 @@ func Wrap(L *lua.LState, goval reflect.Value) (lua.LValue, error) {
 		return lua.LNil, nil
 	}
 
-	return WrapAs(L, goval, goval.Type())
+	return wrapAs(L, goval, goval.Type())
 }
 
-func WrapAs(L *lua.LState, goval reflect.Value, nvtype reflect.Type) (lua.LValue, error) {
+func wrapAs(L *lua.LState, goval reflect.Value, nvtype reflect.Type) (lua.LValue, error) {
 	if !goval.IsValid() {
 		return lua.LNil, nil
 	}
@@ -81,13 +81,13 @@ func WrapAs(L *lua.LState, goval reflect.Value, nvtype reflect.Type) (lua.LValue
 			return lua.LNil, nil
 		}
 		elemVal := goval.Elem()
-		return WrapAs(L, elemVal, elemVal.Type())
+		return wrapAs(L, elemVal, elemVal.Type())
 
 	case reflect.Ptr:
 		if goval.IsNil() {
 			return lua.LNil, nil
 		}
-		return WrapAs(L, goval, nvtype.Elem())
+		return wrapAs(L, goval, nvtype.Elem())
 
 	default:
 		return nil, fmt.Errorf("luaconv.Wrap: cannot convert %v to lua value", nvtype.String())
