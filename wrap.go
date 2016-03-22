@@ -74,7 +74,7 @@ func wrapAs(L *lua.LState, goval reflect.Value, nvtype reflect.Type) (lua.LValue
 		// return ud, err
 
 	case reflect.Func:
-		return wrapFunc(L, goval), nil
+		return L.NewFunction(wrapFunc(goval)), nil
 
 	case reflect.Interface:
 		if goval.IsNil() {
@@ -115,12 +115,12 @@ func wrapStruct(L *lua.LState, goval reflect.Value) (*lua.LUserData, error) {
 	return ud, nil
 }
 
-func wrapFunc(L *lua.LState, fnval reflect.Value) *lua.LFunction {
+func wrapFunc(fnval reflect.Value) func(*lua.LState) int {
 	fntype := fnval.Type()
 	numIn := fntype.NumIn()
 	numOut := fntype.NumOut()
 
-	return L.NewFunction(func(L *lua.LState) int {
+	return func(L *lua.LState) int {
 		luaNumIn := L.GetTop()
 		if luaNumIn != numIn {
 			L.RaiseError("expected %v args, got %v", numIn, luaNumIn)
@@ -151,7 +151,7 @@ func wrapFunc(L *lua.LState, fnval reflect.Value) *lua.LFunction {
 		}
 
 		return numOut
-	})
+	}
 }
 
 func Unwrap(lv lua.LValue, destType reflect.Type) (reflect.Value, error) {

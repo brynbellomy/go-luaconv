@@ -4,10 +4,19 @@ import (
 	"fmt"
 	"reflect"
 
+	// "github.com/brynbellomy/go-structomancer"
 	"github.com/yuin/gopher-lua"
 )
 
+// type (
+// 	luaStruct struct {
+// 		z *structomancer.Structomancer
+// 	}
+// )
+
 func MetatableForStruct(L *lua.LState, val reflect.Value) *lua.LTable {
+	// x := &luaStruct{structomancer.NewWithType(val.Type(), "")}
+
 	return metatableForValue(L, val, map[string]func(*lua.LState) int{
 		"__index":    structIndex,
 		"__newindex": structSetIndex,
@@ -70,6 +79,7 @@ func MetatableForArray(L *lua.LState, val reflect.Value) *lua.LTable {
 	return metatableForValue(L, val, map[string]func(*lua.LState) int{
 		"__index":    sliceIndex,
 		"__newindex": sliceSetIndex,
+		"__len":      sliceLen,
 		"__tostring": luaToString,
 	})
 }
@@ -78,6 +88,7 @@ func MetatableForSlice(L *lua.LState, val reflect.Value) *lua.LTable {
 	return metatableForValue(L, val, map[string]func(*lua.LState) int{
 		"__index":    sliceIndex,
 		"__newindex": sliceSetIndex,
+		"__len":      sliceLen,
 		"__tostring": luaToString,
 	})
 }
@@ -149,6 +160,13 @@ func sliceSetIndex(L *lua.LState) int {
 	return 0
 }
 
+func sliceLen(L *lua.LState) int {
+	v := L.CheckUserData(1)
+	slice := v.Value.(reflect.Value)
+	L.Push(lua.LNumber(slice.Len()))
+	return 1
+}
+
 func metatableForValue(L *lua.LState, val reflect.Value, metamethods map[string]func(*lua.LState) int) *lua.LTable {
 	if !val.IsValid() {
 		return nil
@@ -161,40 +179,19 @@ func metatableForValue(L *lua.LState, val reflect.Value, metamethods map[string]
 		}
 	}
 
-	metatable := L.NewTable()
-	metatable.RawSetString("methods", makeMethodTableForValue(L, val))
-	for key, method := range metamethods {
-		metatable.RawSetString(key, L.NewFunction(method))
-	}
-
-	return metatable
-}
-
-func makeMethodTableForValue(L *lua.LState, val reflect.Value) *lua.LTable {
 	vtype := val.Type()
 	if vtype.Kind() == reflect.Interface {
 		val = val.Elem()
 		vtype = val.Type()
 	}
 
-	methods := L.NewTable()
-
-	if vtype.Kind() != reflect.Ptr {
-		ptrType := reflect.PtrTo(vtype)
-		for i := 0; i < ptrType.NumMethod(); i++ {
-			m := ptrType.Method(i)
-			luafn := wrapFunc(L, m.Func)
-			methods.RawSetString(m.Name, luafn)
-		}
+	metatable := L.NewTable()
+	metatable.RawSetString("methods", methodsetForType(vtype).toLuaTable(L))
+	for key, method := range metamethods {
+		metatable.RawSetString(key, L.NewFunction(method))
 	}
 
-	for i := 0; i < vtype.NumMethod(); i++ {
-		m := vtype.Method(i)
-		luafn := wrapFunc(L, m.Func)
-		methods.RawSetString(m.Name, luafn)
-	}
-
-	return methods
+	return metatable
 }
 
 func luaToString(L *lua.LState) int {
