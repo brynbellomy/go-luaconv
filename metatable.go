@@ -7,6 +7,32 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
+func metatableForStruct(L *lua.LState, val reflect.Value) *lua.LTable {
+	return metatableForValue(L, val, map[string]func(*lua.LState) int{
+		"__index":    structIndex,
+		"__newindex": structSetIndex,
+		"__tostring": luaToString,
+	})
+}
+
+func metatableForArray(L *lua.LState, val reflect.Value) *lua.LTable {
+	return metatableForValue(L, val, map[string]func(*lua.LState) int{
+		"__index":    sliceIndex,
+		"__newindex": sliceSetIndex,
+		"__len":      sliceLen,
+		"__tostring": luaToString,
+	})
+}
+
+func metatableForSlice(L *lua.LState, val reflect.Value) *lua.LTable {
+	return metatableForValue(L, val, map[string]func(*lua.LState) int{
+		"__index":    sliceIndex,
+		"__newindex": sliceSetIndex,
+		"__len":      sliceLen,
+		"__tostring": luaToString,
+	})
+}
+
 func structIndex(L *lua.LState) int {
 	v := L.CheckUserData(1)
 	key := L.CheckString(2)
