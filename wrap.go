@@ -175,9 +175,19 @@ func Unwrap(lv lua.LValue, destType reflect.Type) (reflect.Value, error) {
 
 	// unwrapping is basically a no-op unless we encounter native Lua values, which we have to decode
 
-	switch lv := lv.(type) {
-	case *lua.LUserData:
-		return lv.Value.(reflect.Value), nil
+	if ud, is := lv.(*lua.LUserData); is {
+		rval := ud.Value.(reflect.Value)
+		rtype := rval.Type()
+
+		if rtype == destType {
+			return rval, nil
+		} else if rtype.ConvertibleTo(destType) {
+			return rval.Convert(destType), nil
+		} else if destType == reflect.PtrTo(rtype) && rval.CanAddr() {
+			return rval.Addr(), nil
+		} else {
+			return reflect.Value{}, fmt.Errorf("luaconv.Decode: cannot convert userdata(%v) to %v", rtype, destType.String())
+		}
 	}
 
 	switch destType.Kind() {
