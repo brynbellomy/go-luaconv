@@ -7,7 +7,7 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
-func Encode(L *lua.LState, nvval reflect.Value, subtag string) (lua.LValue, error) {
+func Encode(L *lua.LState, nvval reflect.Value) (lua.LValue, error) {
 	if !nvval.IsValid() {
 		return lua.LNil, nil
 	}
@@ -19,7 +19,7 @@ func Encode(L *lua.LState, nvval reflect.Value, subtag string) (lua.LValue, erro
 		return lua.LNil, nil
 
 	case reflect.Interface:
-		return Encode(L, nvval.Elem(), subtag)
+		return Encode(L, nvval.Elem())
 
 	case reflect.Bool:
 		return lua.LBool(nvval.Bool()), nil
@@ -51,7 +51,7 @@ func Encode(L *lua.LState, nvval reflect.Value, subtag string) (lua.LValue, erro
 		table := L.NewTable()
 		for i := 0; i < nvval.Len(); i++ {
 			elem := nvval.Index(i)
-			luaElem, err := Encode(L, elem, subtag)
+			luaElem, err := Encode(L, elem)
 			if err != nil {
 				return nil, err
 			}
@@ -62,7 +62,7 @@ func Encode(L *lua.LState, nvval reflect.Value, subtag string) (lua.LValue, erro
 		return table, nil
 
 	case reflect.Struct:
-		coder := NewStructCoder(nvtype, subtag)
+		coder := NewStructCoder(nvtype)
 		return coder.StructToTable(L, nvval)
 
 	case reflect.Map:
@@ -73,12 +73,12 @@ func Encode(L *lua.LState, nvval reflect.Value, subtag string) (lua.LValue, erro
 			key := mapKeys[i]
 			val := nvval.MapIndex(key)
 
-			luaKey, err := Encode(L, key, subtag)
+			luaKey, err := Encode(L, key)
 			if err != nil {
 				return nil, err
 			}
 
-			luaVal, err := Encode(L, val, subtag)
+			luaVal, err := Encode(L, val)
 			if err != nil {
 				return nil, err
 			}
@@ -104,7 +104,7 @@ var (
 	mapType    = reflect.TypeOf(map[string]interface{}{})
 )
 
-func Decode(lv lua.LValue, destType reflect.Type, subtag string) (reflect.Value, error) {
+func Decode(lv lua.LValue, destType reflect.Type) (reflect.Value, error) {
 	// special handling for lua UserData values
 	if ud, is := lv.(*lua.LUserData); is {
 		rval := ud.Value.(reflect.Value)
@@ -125,16 +125,16 @@ func Decode(lv lua.LValue, destType reflect.Type, subtag string) (reflect.Value,
 	case reflect.Interface:
 		switch lv := lv.(type) {
 		case lua.LString:
-			return Decode(lv, stringType, subtag)
+			return Decode(lv, stringType)
 		case lua.LNumber:
-			return Decode(lv, numberType, subtag)
+			return Decode(lv, numberType)
 		case lua.LBool:
-			return Decode(lv, boolType, subtag)
+			return Decode(lv, boolType)
 		case *lua.LTable:
 			if lv.MaxN() == 0 {
-				return Decode(lv, sliceType, subtag)
+				return Decode(lv, sliceType)
 			} else {
-				return Decode(lv, mapType, subtag)
+				return Decode(lv, mapType)
 			}
 		default:
 			return reflect.Value{}, fmt.Errorf("luaconv.Decode: cannot convert %v to %v", lv.Type(), destType.String())
@@ -192,7 +192,7 @@ func Decode(lv lua.LValue, destType reflect.Type, subtag string) (reflect.Value,
 		for i := 0; i < maxn; i++ {
 			luaVal := table.RawGet(lua.LNumber(i + 1))
 
-			x, err := Decode(luaVal, destType.Elem(), subtag)
+			x, err := Decode(luaVal, destType.Elem())
 			if err != nil {
 				return reflect.Value{}, err
 			}
@@ -214,7 +214,7 @@ func Decode(lv lua.LValue, destType reflect.Type, subtag string) (reflect.Value,
 		for i := 0; i < maxn; i++ {
 			luaVal := table.RawGet(lua.LNumber(i + 1))
 
-			x, err := Decode(luaVal, destType.Elem(), subtag)
+			x, err := Decode(luaVal, destType.Elem())
 			if err != nil {
 				return reflect.Value{}, err
 			}
@@ -236,12 +236,12 @@ func Decode(lv lua.LValue, destType reflect.Type, subtag string) (reflect.Value,
 		destTypeElem := destType.Elem()
 
 		for _, x := range tableData {
-			nvkey, err := Decode(x.key, destTypeKey, subtag)
+			nvkey, err := Decode(x.key, destTypeKey)
 			if err != nil {
 				return reflect.Value{}, err
 			}
 
-			nvval, err := Decode(x.val, destTypeElem, subtag)
+			nvval, err := Decode(x.val, destTypeElem)
 			if err != nil {
 				return reflect.Value{}, err
 			}
@@ -254,7 +254,7 @@ func Decode(lv lua.LValue, destType reflect.Type, subtag string) (reflect.Value,
 	case reflect.Struct:
 		switch lv := lv.(type) {
 		case *lua.LTable:
-			coder := NewStructCoder(destType, subtag)
+			coder := NewStructCoder(destType)
 			aStruct, err := coder.TableToStruct(lv)
 			if err != nil {
 				return reflect.Value{}, err
@@ -276,18 +276,4 @@ func Decode(lv lua.LValue, destType reflect.Type, subtag string) (reflect.Value,
 	default:
 		return reflect.Value{}, fmt.Errorf("luaconv.Decode: cannot convert %v to %v", lv.Type(), destType.String())
 	}
-}
-
-type luaTableData struct {
-	key, val lua.LValue
-}
-
-func getLuaTableData(table *lua.LTable) []luaTableData {
-	tableData := []luaTableData{}
-
-	table.ForEach(func(key, val lua.LValue) {
-		tableData = append(tableData, luaTableData{key, val})
-	})
-
-	return tableData
 }

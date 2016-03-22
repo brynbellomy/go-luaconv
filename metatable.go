@@ -4,25 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	// "github.com/brynbellomy/go-structomancer"
 	"github.com/yuin/gopher-lua"
 )
-
-// type (
-// 	luaStruct struct {
-// 		z *structomancer.Structomancer
-// 	}
-// )
-
-func MetatableForStruct(L *lua.LState, val reflect.Value) *lua.LTable {
-	// x := &luaStruct{structomancer.NewWithType(val.Type(), "")}
-
-	return metatableForValue(L, val, map[string]func(*lua.LState) int{
-		"__index":    structIndex,
-		"__newindex": structSetIndex,
-		"__tostring": luaToString,
-	})
-}
 
 func structIndex(L *lua.LState) int {
 	v := L.CheckUserData(1)
@@ -65,7 +48,7 @@ func structSetIndex(L *lua.LState) int {
 
 	field := rval.FieldByName(key)
 
-	fieldval, err := Decode(luaval, field.Type(), "")
+	fieldval, err := Unwrap(luaval, field.Type())
 	if err != nil {
 		L.RaiseError(err.Error())
 		return 0
@@ -73,24 +56,6 @@ func structSetIndex(L *lua.LState) int {
 
 	field.Set(fieldval)
 	return 0
-}
-
-func MetatableForArray(L *lua.LState, val reflect.Value) *lua.LTable {
-	return metatableForValue(L, val, map[string]func(*lua.LState) int{
-		"__index":    sliceIndex,
-		"__newindex": sliceSetIndex,
-		"__len":      sliceLen,
-		"__tostring": luaToString,
-	})
-}
-
-func MetatableForSlice(L *lua.LState, val reflect.Value) *lua.LTable {
-	return metatableForValue(L, val, map[string]func(*lua.LState) int{
-		"__index":    sliceIndex,
-		"__newindex": sliceSetIndex,
-		"__len":      sliceLen,
-		"__tostring": luaToString,
-	})
 }
 
 func sliceIndex(L *lua.LState) int {

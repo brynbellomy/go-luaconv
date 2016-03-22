@@ -22,7 +22,7 @@ var _ = Describe("StructCoder", func() {
 
 	BeforeEach(func() {
 		L = lua.NewState()
-		coder = luaconv.NewStructCoder(reflect.TypeOf(&Blah{}), "lua")
+		coder = luaconv.NewStructCoder(reflect.TypeOf(&Blah{}))
 	})
 
 	Context("when .StructToTable is called", func() {
@@ -85,7 +85,7 @@ var _ = Describe("Encode", func() {
 			}
 
 			for i := range tests {
-				luaVal, err := luaconv.Encode(L, reflect.ValueOf(tests[i].Go), "")
+				luaVal, err := luaconv.Encode(L, reflect.ValueOf(tests[i].Go))
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -104,7 +104,7 @@ var _ = Describe("Encode", func() {
 				"bar":   int64(123),
 			}
 
-			luaVal, err := luaconv.Encode(L, reflect.ValueOf(expected), "")
+			luaVal, err := luaconv.Encode(L, reflect.ValueOf(expected))
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -133,7 +133,7 @@ var _ = Describe("Decode", func() {
 			type Name string
 			nameType := reflect.TypeOf(Name(""))
 
-			nv, err := luaconv.Decode(lua.LString("bryn"), nameType, "")
+			nv, err := luaconv.Decode(lua.LString("bryn"), nameType)
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -147,7 +147,7 @@ var _ = Describe("Decode", func() {
 			type Age uint64
 			ageType := reflect.TypeOf(Age(0))
 
-			nv, err := luaconv.Decode(lua.LNumber(123), ageType, "")
+			nv, err := luaconv.Decode(lua.LNumber(123), ageType)
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -171,7 +171,7 @@ var _ = Describe("Decode", func() {
 			table.RawSetString("name", lua.LString("bryn"))
 			table.RawSetString("color", lua.LNumber(123))
 
-			nv, err := luaconv.Decode(table, reflect.TypeOf(Blah{}), "lua")
+			nv, err := luaconv.Decode(table, reflect.TypeOf(Blah{}))
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -188,7 +188,7 @@ var _ = Describe("Decode", func() {
 			table.RawSetString("name", lua.LString("bryn"))
 			table.RawSetString("color", lua.LNumber(123))
 
-			nv, err := luaconv.Decode(table, reflect.TypeOf(map[string]interface{}{}), "lua")
+			nv, err := luaconv.Decode(table, reflect.TypeOf(map[string]interface{}{}))
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -213,7 +213,7 @@ var _ = Describe("Decode", func() {
 			table.RawSetInt(1, lua.LString("foo"))
 			table.RawSetInt(2, lua.LString("bar"))
 
-			nv, err := luaconv.Decode(table, namesType, "")
+			nv, err := luaconv.Decode(table, namesType)
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -233,7 +233,7 @@ var _ = Describe("Decode", func() {
 			table.RawSetInt(1, lua.LString("foo"))
 			table.RawSetInt(2, lua.LString("bar"))
 
-			nv, err := luaconv.Decode(table, namesType, "")
+			nv, err := luaconv.Decode(table, namesType)
 			if err != nil {
 				Fail(err.Error())
 			}

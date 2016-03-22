@@ -10,15 +10,13 @@ import (
 
 type (
 	StructCoder struct {
-		z       *structomancer.Structomancer
-		tagName string
+		z *structomancer.Structomancer
 	}
 )
 
-func NewStructCoder(structType reflect.Type, tagName string) *StructCoder {
+func NewStructCoder(structType reflect.Type) *StructCoder {
 	return &StructCoder{
-		z:       structomancer.NewWithType(structType, tagName),
-		tagName: tagName,
+		z: structomancer.NewWithType(structType, "lua"),
 	}
 }
 
@@ -30,7 +28,7 @@ func (c *StructCoder) StructToTable(L *lua.LState, aStruct interface{}) (*lua.LT
 
 	table := L.NewTable()
 	for key, val := range m {
-		luaVal, err := Encode(L, reflect.ValueOf(val), c.tagName)
+		luaVal, err := Encode(L, reflect.ValueOf(val))
 		if err != nil {
 			return nil, err
 		}
@@ -51,7 +49,7 @@ func (c *StructCoder) TableToStruct(table *lua.LTable) (interface{}, error) {
 			return nil, errors.New("luaconv.StructCoder.TableToStruct: cannot convert a table with non-string keys to a struct")
 		}
 
-		val, err := Decode(x.val, c.z.Field(string(key)).Type(), c.tagName)
+		val, err := Decode(x.val, c.z.Field(string(key)).Type())
 		if err != nil {
 			return nil, err
 		}
