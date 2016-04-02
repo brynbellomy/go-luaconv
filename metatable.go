@@ -33,6 +33,15 @@ func metatableForSlice(L *lua.LState, val reflect.Value) *lua.LTable {
 	})
 }
 
+func metatableForMap(L *lua.LState, val reflect.Value) *lua.LTable {
+	return metatableForValue(L, val, map[string]func(*lua.LState) int{
+		"__index":    mapIndex,
+		"__newindex": mapSetIndex,
+		"__len":      mapLen,
+		"__tostring": luaToString,
+	})
+}
+
 func structIndex(L *lua.LState) int {
 	v := L.CheckUserData(1)
 	key := L.CheckString(2)
@@ -155,6 +164,53 @@ func sliceLen(L *lua.LState) int {
 	v := L.CheckUserData(1)
 	slice := v.Value.(reflect.Value)
 	L.Push(lua.LNumber(slice.Len()))
+	return 1
+}
+
+func mapIndex(L *lua.LState) int {
+	v := L.CheckUserData(1)
+	m := v.Value.(reflect.Value)
+	key := L.CheckString(2)
+	val := m.MapIndex(reflect.ValueOf(key))
+
+	luaval, err := Wrap(L, val)
+	if err != nil {
+		L.RaiseError(err.Error())
+		return 0
+	}
+
+	L.Push(luaval)
+	return 1
+
+}
+
+func mapSetIndex(L *lua.LState) int {
+	v := L.CheckUserData(1)
+	m := v.Value.(reflect.Value)
+	luakey := L.CheckAny(2)
+	luaval := L.CheckAny(3)
+
+	gokey, err := Unwrap(luakey, m.Type().Key())
+	if err != nil {
+		L.RaiseError(err.Error())
+		return 0
+	}
+
+	goval, err := Unwrap(luaval, m.Type().Elem())
+	if err != nil {
+		L.RaiseError(err.Error())
+		return 0
+	}
+
+	m.SetMapIndex(gokey, goval)
+
+	return 0
+}
+
+func mapLen(L *lua.LState) int {
+	v := L.CheckUserData(1)
+	m := v.Value.(reflect.Value)
+	L.Push(lua.LNumber(m.Len()))
 	return 1
 }
 

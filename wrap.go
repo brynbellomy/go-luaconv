@@ -90,7 +90,10 @@ func wrapAs(L *lua.LState, goval reflect.Value, wraptype reflect.Type) (lua.LVal
 		if goval.IsNil() {
 			return lua.LNil, nil
 		}
-		panic("@@TODO")
+		ud := L.NewUserData()
+		ud.Value = goval
+		ud.Metatable = metatableForMap(L, goval)
+		return ud, nil
 
 	case reflect.Func:
 		if goval.IsNil() {
@@ -160,7 +163,10 @@ func Unwrap(lv lua.LValue, destType reflect.Type) (reflect.Value, error) {
 		} else if destType == reflect.PtrTo(rtype) && rval.CanAddr() {
 			return rval.Addr(), nil
 		} else {
-			return reflect.Value{}, fmt.Errorf("luaconv.Decode: cannot convert userdata(%v) to %v", rtype, destType.String())
+			if !rval.CanAddr() {
+				fmt.Println("NOT rval.CanAddr")
+			}
+			return reflect.Value{}, fmt.Errorf("luaconv.Unwrap: cannot convert userdata(%v) to %v", rtype, destType.String())
 		}
 	}
 
