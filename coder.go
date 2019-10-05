@@ -140,6 +140,15 @@ func Decode(lv lua.LValue, destType reflect.Type) (reflect.Value, error) {
 			return reflect.Value{}, fmt.Errorf("luaconv.Decode: cannot convert %v to %v", lv.Type(), destType.String())
 		}
 
+	case reflect.Bool:
+		switch lv := lv.(type) {
+		case lua.LBool:
+			return reflect.ValueOf(bool(lv)), nil
+
+		default:
+			return reflect.Value{}, fmt.Errorf("luaconv.Decode: cannot convert %v to %v", lv.Type(), destType.String())
+		}
+
 	case reflect.String:
 		switch lv := lv.(type) {
 		case lua.LString:
