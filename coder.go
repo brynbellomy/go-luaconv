@@ -131,7 +131,7 @@ func Decode(lv lua.LValue, destType reflect.Type) (reflect.Value, error) {
 		case lua.LBool:
 			return Decode(lv, boolType)
 		case *lua.LTable:
-			if lv.MaxN() == 0 {
+			if lv.MaxN() > 0 {
 				return Decode(lv, sliceType)
 			} else {
 				return Decode(lv, mapType)

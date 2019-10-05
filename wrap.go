@@ -180,7 +180,7 @@ func Unwrap(lv lua.LValue, destType reflect.Type) (reflect.Value, error) {
 		case lua.LBool:
 			return Unwrap(lv, boolType)
 		case *lua.LTable:
-			if lv.MaxN() == 0 {
+			if lv.MaxN() > 0 {
 				return Unwrap(lv, sliceType)
 			} else {
 				return Unwrap(lv, mapType)
